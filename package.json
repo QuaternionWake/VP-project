@@ -1,0 +1,12 @@
+{
+  "name": "kv",
+  "main": "index.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "dependencies": {
+    "express": "^5.2.1",
+    "path": "^0.12.7"
+  }
+}
