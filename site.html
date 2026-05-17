@@ -4,50 +4,43 @@
 	<title>Vizualizacija Podataka KV</title>
 	<script src="https://d3js.org/d3.v7.min.js"></script>
 	<script src="http://d3js.org/topojson.v3.min.js"></script>
-	<style>
-		.country {
-			stroke: #fff;
-		}
-		body {
-			display: flex;
-			flex-direction: row;
-		}
-		svg {
-			display: block;
-		}
-		#sidebar {
-			background-color: #f7f7f7;
-		}
-	</style>
+	<link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-	<div id="main">
-		<div id="controls">
-			<div>
-				<label for="dataset-select">Dataset: </label>
-				<select id="dataset-select"></select>
-			</div>
-			<div>
-				<label for="year-slider">Year: </label>
-				<input id="year-slider" type="range" min=1990 max=2024 step=1 value=2020>
-				<span id="year-display"></span>
-			</div>
-		</div>
-		<svg id="map" width=800 height=800></svg>
+	<div>
+		<h1>Europe Throughout the Years</h1>
 	</div>
-	<div id="sidebar">
-		<h2 id="sidebar-title"></h2>
-		<div>
-			<span id="sidebar-measurement-title"></span>
+	<div class="flex-row">
+		<div id="main">
+			<div id="controls">
+				<div class="control-row">
+					<label for="dataset-select">Dataset: </label>
+					<select id="dataset-select"></select>
+				</div>
+				<div class="control-row">
+					<label for="year-slider">Year: </label>
+					<input id="year-slider" type="range" min=1990 max=2024 step=1 value=2020>
+					<span id="year-display"></span>
+				</div>
+			</div>
+			<svg id="map" width=800 height=700></svg>
 		</div>
-		<div>
-			<span id="sidebar-measurement-value"></span>
-			<span id="sidebar-measurement-unit"></span>
-		</div>
-		<div>
-			<span id="sidebar-chart-title">Historic data</span>
-			<svg id="linechart" width=400 height=300></svg>
+		<div id="sidebar">
+			<h2 id="sidebar-title"></h2>
+			<div id="sidebar-textinfo">
+				<div>
+					<span id="sidebar-measurement-title"></span>
+				</div>
+				<div>
+					<span id="sidebar-measurement-value"></span>
+					<span id="sidebar-measurement-unit"></span>
+				</div>
+			</div>
+			<div>
+				<span id="sidebar-chart-title">Historic data</span>
+				<svg id="linechart" width=400 height=300></svg>
+			</div>
 		</div>
 	</div>
 

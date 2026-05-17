@@ -150,12 +150,22 @@ async function drawMap() {
 	const objKey = Object.keys(topo.objects)[0];
 	const objs = topojson.feature(topo, topo.objects[objKey]);
 
-	const width = svg.attr("width");
-	const height = svg.attr("height");
+	const padding = 20;
+	const width = Number(svg.attr("width"));
+	const height = Number(svg.attr("height"));
+	const viewBox = {
+		x: -padding,
+		y: -padding,
+		width: width+2*padding,
+		height: height+2*padding,
+	};
 
+	svg.attr("viewBox", `${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`);
 	svg.append("rect")
-		.attr("width", width)
-		.attr("height", height)
+		.attr("x", viewBox.x)
+		.attr("y", viewBox.y)
+		.attr("width", viewBox.width)
+		.attr("height", viewBox.height)
 		.attr("opacity", 0)
 		.on("click", _ => {
 			selectedCountry = null;
@@ -180,18 +190,19 @@ async function drawMap() {
 		});
 }
 
+const ZERO_COLOR = "#e8e8e8";
 function createColorScale(dataset, year) {
 	if (dataset.unit == "%") {
 		return d3.scaleLinear()
 			.domain([0, 100])
-			.range(["#f0f0f0", dataset.color]);
+			.range([ZERO_COLOR, dataset.color]);
 	}
 
 	const values = dataset.getYearValues(year).filter(d => d !== null);
 	const domain = d3.extent(values);
 	return d3.scaleLinear()
 		.domain(domain)
-		.range(["#f0f0f0", dataset.color]);
+		.range([ZERO_COLOR, dataset.color]);
 }
 
 function getCountryColor(dataset, country, colorScale, year) {
@@ -237,7 +248,7 @@ async function drawSidebar() {
 	drawLinechart(currentDataset, selectedCountry);
 }
 
-const GRID_LINE_COLOR = "#ddd";
+const GRID_LINE_COLOR = "#bcc";
 function drawLinechart(dataset, country) {
 	const svg = d3.select("#linechart");
 	svg.selectAll("*").remove();

@@ -1,0 +1,180 @@
+:root {
+	--border: 2px solid #bdd;
+	--panel-bg: #cee;
+}
+
+body {
+	margin: 0;
+	font-family: sans-serif;
+	display: grid;
+	grid-template-rows: min-content auto;
+	height: 100vh;
+	background-color: #eff;
+}
+
+.flex-row {
+	display: flex;
+	flex-direction: row;
+}
+
+h1 {
+	margin: 0;
+	padding: 0.5em;
+	text-align: center;
+	border-bottom: var(--border);
+	background-color: var(--panel-bg);
+}
+
+svg {
+	display: block;
+}
+
+#map {
+	border-radius: 5px 0 5px 5px;
+}
+
+.country {
+	stroke: #faffff;
+}
+
+#controls {
+	background-color: var(--panel-bg);
+	padding: 0.7rem 1rem;
+	border-bottom: var(--border);
+	& > * {
+		margin-bottom: 0.7em;
+		&:last-child {
+			margin-bottom: 0;
+		}
+	}
+}
+
+.control-row {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+}
+
+input, select {
+	cursor: pointer;
+}
+
+select {
+	margin-left: 0.5em
+}
+
+input[type="range"] {
+	appearance: none;
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	background-color: #0000;
+	margin: 0 0.5em;
+	width: 30em;
+	&::-moz-range-thumb {
+		width: 15px;
+		height: 15px;
+		background-color: #8dd;
+		border: 1px solid #6bb;
+		border-radius: 50%;
+	}
+	&::-webkit-slider-thumb {
+		appearance: none;
+		-webkit-appearance: none;
+		width: 15px;
+		height: 15px;
+		background-color: #8dd;
+		border: 1px solid #6bb;
+		border-radius: 50%;
+		margin-top: -5.5px; /* and here I thought firefox was supposed to be the broken one */
+	}
+	&::-moz-range-track {
+		height: 4px;
+		background-color: #bdd;
+		border-radius: 4px;
+	}
+	&::-webkit-slider-runnable-track {
+		appearance: none;
+		-webkit-appearance: none;
+		height: 4px;
+		background-color: #bdd;
+		border-radius: 4px;
+	}
+	/* not doable in webkit via css */
+	&::-moz-range-progress {
+		background-color: #5aa;
+		height: 4px;
+		border-radius: 4px;
+	}
+	/* & can't represent pseudoelements... damn */
+	&::-moz-range-thumb:hover {
+		background-color: #aee;
+		border-color: #8cc;
+	}
+	&::-webkit-slider-thumb:hover {
+		background-color: #aee;
+		border-color: #8cc;
+	}
+}
+
+select {
+	background-color: #8dd;
+	border: 2px solid #6bb;
+	padding: 0.3em;
+	border-radius: 5px;
+	&:hover {
+		background-color: #aee;
+		border-color: #8cc;
+	}
+}
+
+#sidebar {
+	box-sizing: border-box;
+	background-color: var(--panel-bg);
+	flex-grow: 1;
+	padding: 1rem 1.5rem;
+	border-left: var(--border);
+	& span:first-child {
+		padding-left: 0.2em;
+	}
+}
+
+
+#sidebar-textinfo {
+	margin-bottom: 1em;
+}
+
+h2 {
+	margin-top: 0;
+	padding: 0.2em;
+	border-bottom: var(--border);
+}
+
+#linechart {
+	padding: 0.5em;
+	margin-top: 0.5em;
+	border-top: 1px solid #bdd;
+}
+
+@media screen and (width >= 1300px) {
+	body {
+		justify-content: center;
+		height: unset;
+	}
+
+	#sidebar {
+		border: var(--border);
+		border-top: unset;
+		border-radius: 0 0 10px 10px;
+		flex-grow: unset;
+	}
+
+	#controls {
+		border-left: var(--border);
+		border-bottom-left-radius: 10px;
+	}
+
+	h1 {
+		border-right: var(--border);
+		border-left: var(--border);
+	}
+}
