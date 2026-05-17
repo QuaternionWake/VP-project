@@ -26,10 +26,10 @@ const datasetSelect = d3.select("#dataset-select");
 const yearSlider = d3.select("#year-slider");
 
 const datasetKeys = Object.keys(DATASETS);
-for (const k of datasetKeys) {
-	const dataset = DATASETS[k];
+for (const keys of datasetKeys) {
+	const dataset = DATASETS[keys];
 	datasetSelect.append("option")
-		.attr("value", k)
+		.attr("value", keys)
 		.text(dataset.name);
 
 	dataset.loadData = async function() {
@@ -40,34 +40,37 @@ for (const k of datasetKeys) {
 			console.error(`Fetch error: ${response.status} ${response.statusText}`);
 		}
 		const text = await response.text();
-		this.data = d3.csvParse(text, d => {
-			const row = { country: d["Country Code"] };
+		const data = d3.csvParse(text, d => {
+			const data = {};
 			YEARS.map(year => {
-				row[year] = d[year] ? parseFloat(d[year]) : null;
+				data[year] = d[year] ? parseFloat(d[year]) : null;
 			});
-			return row;
+			return { country: d["Country Code"], data: data };
 		});
+		delete data.columns;
+		this.data = new Map;
+		const keys = Object.keys(data);
+		for (const key of keys) {
+			const d = data[key];
+			this.data.set(d.country, d.data);
+		}
 	};
 
 	dataset.getCountryValues = function(country) {
-		const data = this.data;
-		const row = data.find(d => d.country === country);
-		if (!row) return null;
-		const values = YEARS.map(year => row[year]);
-		return values;
+		const values = this.data.get(country);
+		if (!values) return null;
+		return YEARS.map(year => values[year]);
 	}
 
 	dataset.getYearValues = function(year) {
-		const data = this.data;
-		const values = data.map(d => d[year]);
-		return values;
+		const iter = this.data.values().map(d => d[year]);
+		return Array.from(iter);
 	}
 
 	dataset.getValue = function(country, year) {
-		const data = this.data;
-		const row = data.find(d => d.country === country);
-		if (!row) return null;
-		return row[year];
+		const values = this.data.get(country);
+		if (!values) return null;
+		return values[year];
 	}
 
 	dataset.getTotals = function() {
@@ -75,10 +78,9 @@ for (const k of datasetKeys) {
 	}
 
 	dataset.getTotal = function(year) {
-		const data = this.data;
 		let total = 0;
 		let count = 0;
-		for (row of data) {
+		for (const row of this.data.values()) {
 			const value = row[year];
 			if (!value) continue;
 			total += value;
