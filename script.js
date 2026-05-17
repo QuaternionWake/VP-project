@@ -206,7 +206,7 @@ async function drawSidebar() {
 	let value;
 	let name;
 	if (selectedCountry) {
-		name = selectedCountry.properties.name;
+		name = selectedCountry.properties.NAME;
 		value = currentDataset.getValue(selectedCountry.id, currentYear);
 	} else {
 		name = "Europe";
@@ -235,12 +235,12 @@ async function drawSidebar() {
 	drawLinechart(currentDataset, selectedCountry);
 }
 
-const GRID_LINE_COLOR = "#eee";
+const GRID_LINE_COLOR = "#ddd";
 function drawLinechart(dataset, country) {
 	const svg = d3.select("#linechart");
 	svg.selectAll("*").remove();
 
-	const margin = { top: 10, right: 10, bottom: 30, left: 50 };
+	const margin = { top: 30, right: 50, bottom: 20, left: 60 };
 	const width = svg.attr("width") - margin.left - margin.right;
 	const height = svg.attr("height") - margin.top - margin.bottom;
 
@@ -260,28 +260,31 @@ function drawLinechart(dataset, country) {
 
 	const xScale = d3.scaleLinear()
 		.domain(d3.extent(YEARS))
-		.range([margin.left, width - margin.right]);
+		.range([margin.left, width + margin.left])
+		.nice();
 
 	const yScale = d3.scaleLinear()
 		.domain(yDomain)
-		.range([height - margin.bottom, margin.top]);
+		.range([height + margin.top, margin.top]);
 
 	const line = d3.line()
 		.x(d => xScale(d.year))
 		.y(d => yScale(d.value));
 
+	// Grid lines
 	svg.append("g")
 		.attr("stroke", GRID_LINE_COLOR)
 		.call(g => g.append("g")
 			.selectAll("line")
-			.data(yScale.ticks())
+			.data(yScale.ticks(7))
 			.join("line")
 			.attr("x1", margin.left)
-			.attr("x2", width - margin.right)
+			.attr("x2", width + margin.left)
 			.attr("y1", d => yScale(d))
 			.attr("y2", d => yScale(d))
 		);
 
+	// The titular line
 	svg.append("path")
 		.datum(YEARS.map(year => ({ value: data[year-YEARS[0]], year: year })).filter(d => d.value !== null))
 		.attr("fill", "none")
@@ -289,19 +292,34 @@ function drawLinechart(dataset, country) {
 		.attr("stroke-width", 2)
 		.attr("d", line);
 
+	// X axis
 	svg.append("g")
-		.attr("transform", `translate(0, ${height - margin.bottom})`)
-		.call(d3.axisBottom(xScale)
-			.tickFormat(d3.format("d"))
-			.ticks(5)
-		);
+		.attr("transform", `translate(0, ${height + margin.top})`)
+		.call(d3.axisBottom(xScale).ticks(5, "d"))
+		.append("text")
+		.attr("class", "axis-label")
+		.attr("text-anchor", "start")
+		.attr("x", width + margin.left)
+		.attr("dx", "1em")
+		.attr("y", "0.5em")
+		.attr("font-size", "1.4em")
+		.attr("font-weight", "bold")
+		.attr("fill", "currentColor")
+		.text("Year");
 
+	// Y axis
 	svg.append("g")
 		.attr("transform", `translate(${margin.left}, 0)`)
-		.call(d3.axisLeft(yScale)
-			.tickFormat(formatTickNumber)
-			.ticks(5)
-		);
+		.call(d3.axisLeft(yScale).tickFormat(formatTickNumber).ticks(7))
+		.append("text")
+		.attr("class", "axis-label")
+		.attr("text-anchor", "middle")
+		.attr("y", margin.top)
+		.attr("dy", "-.7em")
+		.attr("font-size", "1.4em")
+		.attr("font-weight", "bold")
+		.attr("fill", "currentColor")
+		.text(dataset.unit);
 }
 
 const MIN_Y_DOMAIN = 1.5
