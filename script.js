@@ -4,8 +4,8 @@ const DATASETS = {
 	power: {
 		url: "data_power.csv",
 		data: null,
-		name: "Power Consumpton Per Capita",
-		unit: "kWh per capita",
+		name: "Power Consumpton",
+		unit: "GWh",
 		color: "gold",
 	},
 	renewable: {
