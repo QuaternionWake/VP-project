@@ -1,3 +1,5 @@
+"use strict";
+
 const DATASETS = {
 	power: {
 		url: "data_power.csv",
