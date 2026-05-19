@@ -7,6 +7,9 @@ const DATASETS = {
 		name: "Power Consumpton",
 		unit: "GWh",
 		color: "gold",
+		isPerCapitaifible: true,
+		perCapitaUnit: "kWh",
+		perCapitaMultiplier: 1e6,
 	},
 	renewable: {
 		url: "data_renewable.csv",
@@ -14,6 +17,7 @@ const DATASETS = {
 		name: "% of Power Coming From Renewable Sources",
 		unit: "%",
 		color: "green",
+		isPerCapitaifible: false,
 	},
 	population: {
 		url: "data_population.csv",
@@ -21,20 +25,12 @@ const DATASETS = {
 		name: "Total Population",
 		unit: "People",
 		color: "darkblue",
+		isPerCapitaifible: false,
 	},
 };
 
-const datasetSelect = d3.select("#dataset-select");
-const yearSlider = d3.select("#year-slider");
-
-const datasetKeys = Object.keys(DATASETS);
-for (const keys of datasetKeys) {
-	const dataset = DATASETS[keys];
-	datasetSelect.append("option")
-		.attr("value", keys)
-		.text(dataset.name);
-
-	dataset.loadData = async function() {
+const funs = {
+	async loadData() {
 		if (this.data !== null) return;
 
 		const response = await fetch(this.url);
@@ -56,30 +52,36 @@ for (const keys of datasetKeys) {
 			const d = data[key];
 			this.data.set(d.country, d.data);
 		}
-	};
+	},
 
-	dataset.getCountryValues = function(country) {
+	getCountryValues(country) {
 		const values = this.data.get(country);
 		if (!values) return null;
 		return YEARS.map(year => values[year]);
-	}
+	},
 
-	dataset.getYearValues = function(year) {
+	getYearValues(year) {
 		const iter = this.data.values().map(d => d[year]);
 		return Array.from(iter);
-	}
+	},
 
-	dataset.getValue = function(country, year) {
+	getValue(country, year) {
 		const values = this.data.get(country);
 		if (!values) return null;
 		return values[year];
-	}
+	},
 
-	dataset.getTotals = function() {
+	getTotals() {
 		return YEARS.map(year => this.getTotal(year));
-	}
+	},
 
-	dataset.getTotal = function(year) {
+	getTotal(year) {
+		if (this.name.endsWith(PER_CAPITA_NAME_SUFFIX)) {
+			const total = DATASETS[currentDatasetKey].getTotal(year);
+			const pop = DATASETS.population.getTotal(year);
+			const mul = DATASETS[currentDatasetKey].perCapitaMultiplier || 1;
+			return total*mul/pop;
+		}
 		let total = 0;
 		let count = 0;
 		for (const row of this.data.values()) {
@@ -93,6 +95,21 @@ for (const keys of datasetKeys) {
 		} else {
 			return total;
 		}
+	},
+}
+
+const datasetSelect = d3.select("#dataset-select");
+const yearSlider = d3.select("#year-slider");
+const perCapitaToggle = d3.select("#per-capita-toggle");
+
+for (const key of Object.keys(DATASETS)) {
+	const dataset = DATASETS[key];
+	datasetSelect.append("option")
+		.attr("value", key)
+		.text(dataset.name);
+
+	for (const key of Object.keys(funs)) {
+		dataset[key] = funs[key];
 	}
 }
 
@@ -101,8 +118,9 @@ for (const keys of datasetKeys) {
 // }
 
 datasetSelect.on("change", () => {
-	const datasetKey = datasetSelect.property("value");
-	currentDataset = DATASETS[datasetKey];
+	currentDatasetKey = datasetSelect.property("value");
+	currentDataset = DATASETS[currentDatasetKey];
+	perCapitaToggle.attr("disabled", currentDataset.isPerCapitaifible ? null : "true");
 	// window.sessionStorage.setItem("dataset-key", datasetKey);
 	drawMap();
 	drawSidebar();
@@ -115,13 +133,23 @@ yearSlider.on("input", () => {
 	drawSidebar();
 });
 
+perCapitaToggle.on("change", () => {
+	isPerCapita = perCapitaToggle.property("checked");
+	drawMap();
+	drawSidebar();
+})
+
 const TOPO_URL = "europe-topo.json";
 const YEARS = d3.range(Number(yearSlider.attr("min")), Number(yearSlider.attr("max"))+1);
 const NO_DATA_COLOR = "#ccc";
+const PER_CAPITA_SUFFIX = "PerCapita";
+const PER_CAPITA_NAME_SUFFIX = " Per Capita";
 
 let topo = null;
-let currentDataset = DATASETS[datasetSelect.property("value")];
+let currentDatasetKey = datasetSelect.property("value");
+let currentDataset = DATASETS[currentDatasetKey];
 let currentYear = yearSlider.property("value");
+let isPerCapita = perCapitaToggle.property("checked");
 let selectedCountry = null;
 
 d3.select("#year-display").text(currentYear);
@@ -145,6 +173,7 @@ async function loadMap() {
 async function drawMap() {
 	await loadMap();
 	await currentDataset.loadData();
+	await DATASETS.population.loadData();
 
 	const svg = d3.select("#map");
 	svg.selectAll("*").remove();
@@ -161,6 +190,13 @@ async function drawMap() {
 		width: width+2*padding,
 		height: height+2*padding,
 	};
+
+	if (isPerCapita && currentDataset.isPerCapitaifible) {
+		perCapitaify(currentDatasetKey, DATASETS.population.data)
+		currentDataset = DATASETS[currentDatasetKey + PER_CAPITA_SUFFIX];
+	} else {
+		currentDataset = DATASETS[currentDatasetKey];
+	}
 
 	svg.attr("viewBox", `${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`);
 	svg.append("rect")
@@ -192,6 +228,40 @@ async function drawMap() {
 		});
 }
 
+function perCapitaify(datasetKey, populatons) {
+	const perCapitaKey = datasetKey + PER_CAPITA_SUFFIX;
+	if (DATASETS[perCapitaKey] !== undefined) return;
+
+	const dataset = DATASETS[datasetKey];
+	const perCapita = {
+		url: null,
+		data: new Map(),
+		name: dataset.name + PER_CAPITA_NAME_SUFFIX,
+		unit: (dataset.perCapitaUnit || dataset.unit) + PER_CAPITA_NAME_SUFFIX,
+		color: dataset.color,
+		isPerCapitaifible: true,
+	};
+
+	const multiplier = dataset.perCapitaMultiplier || 1;
+
+	for (const country of dataset.data.keys()) {
+		perCapita.data.set(country, {});
+		for (const year of Object.keys(dataset.data.get(country))) {
+			if (dataset.data.get(country)[year] === null || populatons.get(country)[year] === null) {
+				perCapita.data.get(country)[year] = null;
+			} else {
+				perCapita.data.get(country)[year] = dataset.data.get(country)[year] / populatons.get(country)[year] * multiplier;
+			}
+		}
+	}
+
+	for (const key of Object.keys(funs)) {
+		perCapita[key] = funs[key];
+	}
+
+	DATASETS[perCapitaKey] = perCapita;
+}
+
 const ZERO_COLOR = "#e8e8e8";
 function createColorScale(dataset, year) {
 	if (dataset.unit == "%") {
@@ -217,6 +287,14 @@ function getCountryColor(dataset, country, colorScale, year) {
 // =================
 async function drawSidebar() {
 	await currentDataset.loadData();
+	await DATASETS.population.loadData();
+
+	if (isPerCapita && currentDataset.isPerCapitaifible) {
+		perCapitaify(currentDatasetKey, DATASETS.population.data)
+		currentDataset = DATASETS[currentDatasetKey + PER_CAPITA_SUFFIX];
+	} else {
+		currentDataset = DATASETS[currentDatasetKey];
+	}
 
 	let value;
 	let name;

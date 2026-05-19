@@ -63,6 +63,20 @@ select {
 	margin-left: 0.5em
 }
 
+.check-container {
+	&, * {
+		cursor: pointer;
+	}
+	&:has(>input:disabled) {
+		&, * {
+			cursor: default;
+		}
+		& label {
+			opacity: 0.5;
+		}
+ 	}
+}
+
 input[type="range"] {
 	appearance: none;
 	-webkit-appearance: none;
