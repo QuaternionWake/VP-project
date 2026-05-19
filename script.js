@@ -402,12 +402,14 @@ function drawLinechart(dataset, country) {
 		.x(d => xScale(d.year))
 		.y(d => yScale(d.value));
 
+	const nGridLines = dataset.unit === "%" ? 10 : 7;
+
 	// Grid lines
 	svg.append("g")
 		.attr("stroke", GRID_LINE_COLOR)
 		.call(g => g.append("g")
 			.selectAll("line")
-			.data(yScale.ticks(7))
+			.data(yScale.ticks(nGridLines))
 			.join("line")
 			.attr("x1", margin.left)
 			.attr("x2", width + margin.left)
@@ -441,7 +443,7 @@ function drawLinechart(dataset, country) {
 	// Y axis
 	svg.append("g")
 		.attr("transform", `translate(${margin.left}, 0)`)
-		.call(d3.axisLeft(yScale).tickFormat(formatTickNumber).ticks(7))
+		.call(d3.axisLeft(yScale).tickFormat(formatTickNumber).ticks(nGridLines))
 		.append("text")
 		.attr("class", "axis-label")
 		.attr("text-anchor", "middle")
