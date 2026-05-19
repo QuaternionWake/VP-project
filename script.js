@@ -178,9 +178,6 @@ async function drawMap() {
 	const svg = d3.select("#map");
 	svg.selectAll("*").remove();
 
-	const objKey = Object.keys(topo.objects)[0];
-	const objs = topojson.feature(topo, topo.objects[objKey]);
-
 	const padding = 20;
 	const width = Number(svg.attr("width"));
 	const height = Number(svg.attr("height"));
@@ -211,12 +208,12 @@ async function drawMap() {
 		});
 
 	const projection = d3.geoMercator()
-		.fitSize([width, height], objs);
+		.fitSize([width, height], topo);
 	const path = d3.geoPath().projection(projection);
 	const colorScale = createColorScale(currentDataset, currentYear);
 
 	svg.selectAll(".country")
-		.data(objs.features)
+		.data(topo.features)
 		.join("path")
 		.attr("class", "country")
 		.attr("id", d => d.id)
@@ -299,7 +296,7 @@ async function drawSidebar() {
 	let value;
 	let name;
 	if (selectedCountry) {
-		name = selectedCountry.properties.NAME;
+		name = selectedCountry.properties.name;
 		value = currentDataset.getValue(selectedCountry.id, currentYear);
 	} else {
 		name = "Europe";
