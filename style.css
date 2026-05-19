@@ -1,6 +1,6 @@
 :root {
-	--border: 2px solid #bdd;
-	--panel-bg: #cee;
+	--border: 2px solid #9cc;
+	--panel-bg: #add;
 }
 
 body {
@@ -9,7 +9,7 @@ body {
 	display: grid;
 	grid-template-rows: min-content auto;
 	height: 100vh;
-	background-color: #eff;
+	background-color: #bee;
 }
 
 .flex-row {
@@ -34,7 +34,12 @@ svg {
 }
 
 .country {
-	stroke: #faffff;
+	stroke: #9aa;
+}
+
+.border.selected {
+	stroke: #eff;
+	stroke-width: 3px;
 }
 
 #controls {
@@ -103,14 +108,14 @@ input[type="range"] {
 	}
 	&::-moz-range-track {
 		height: 4px;
-		background-color: #bdd;
+		background-color: #9bb;
 		border-radius: 4px;
 	}
 	&::-webkit-slider-runnable-track {
 		appearance: none;
 		-webkit-appearance: none;
 		height: 4px;
-		background-color: #bdd;
+		background-color: #9bb;
 		border-radius: 4px;
 	}
 	/* not doable in webkit via css */

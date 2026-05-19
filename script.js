@@ -229,6 +229,7 @@ async function drawMap() {
 		.attr("height", viewBox.height)
 		.attr("opacity", 0)
 		.on("click", _ => {
+			d3.selectAll(".selected").classed("selected", false);
 			selectedCountry = null;
 			drawSidebar();
 		});
@@ -246,9 +247,23 @@ async function drawMap() {
 		.attr("d", path)
 		.attr("fill", d => getCountryColor(currentDataset, d.id, colorScale, currentYear))
 		.on("click", (_, d) => {
+			d3.selectAll(".selected").classed("selected", false);
 			selectedCountry = d;
+			d3.select("#" + selectedCountry.id).classed("selected", true);
+			d3.select("#" + selectedCountry.id + "-border").classed("selected", true);
 			drawSidebar();
-		});
+		})
+		.append("title")
+		.text(d => d.properties.name);
+
+	// borders
+	svg.selectAll(".border")
+		.data(topo.features)
+		.join("path")
+		.attr("class", "border")
+		.attr("id", d => d.id + "-border")
+		.attr("d", path)
+		.attr("fill", "none");
 }
 
 function perCapitaify(datasetKey, populatons) {
@@ -285,7 +300,7 @@ function perCapitaify(datasetKey, populatons) {
 	DATASETS[perCapitaKey] = perCapita;
 }
 
-const ZERO_COLOR = "#e8e8e8";
+const ZERO_COLOR = "#e0e0e0";
 function createColorScale(dataset, year) {
 	if (dataset.unit == "%") {
 		return d3.scaleLinear()
@@ -351,7 +366,7 @@ async function drawSidebar() {
 	drawLinechart(currentDataset, selectedCountry);
 }
 
-const GRID_LINE_COLOR = "#bcc";
+const GRID_LINE_COLOR = "#9bb";
 function drawLinechart(dataset, country) {
 	const svg = d3.select("#linechart");
 	svg.selectAll("*").remove();
