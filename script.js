@@ -418,12 +418,15 @@ function drawLinechart(dataset, country) {
 		);
 
 	// The titular line
-	svg.append("path")
-		.datum(YEARS.map(year => ({ value: data[year-YEARS[0]], year: year })).filter(d => d.value !== null))
-		.attr("fill", "none")
-		.attr("stroke", dataset.color)
-		.attr("stroke-width", 2)
-		.attr("d", line);
+	const yearData = YEARS.map(year => ({ value: data[year-YEARS[0]], year: year }));
+	for (const chunk of splitData(yearData)) {
+		svg.append("path")
+			.datum(chunk)
+			.attr("fill", "none")
+			.attr("stroke", dataset.color)
+			.attr("stroke-width", 2)
+			.attr("d", line);
+	}
 
 	// X axis
 	svg.append("g")
@@ -453,6 +456,29 @@ function drawLinechart(dataset, country) {
 		.attr("font-weight", "bold")
 		.attr("fill", "currentColor")
 		.text(dataset.unit);
+}
+
+function splitData(data) {
+	let chunks = [];
+	let start = 0;
+	let canInsert = false;
+	for (let i=0; i<data.length; i++) {
+		if (data[i].value === null) {
+			if (canInsert) {
+				chunks.push(data.slice(start, i));
+				canInsert = false;
+			}
+		} else {
+			if (canInsert === false) {
+				start = i;
+				canInsert = true;
+			}
+		}
+	}
+	if (canInsert) {
+		chunks.push(data.slice(start, -1));
+	}
+	return chunks;
 }
 
 const MIN_Y_DOMAIN = 1.5
