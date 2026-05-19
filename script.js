@@ -11,6 +11,16 @@ const DATASETS = {
 		perCapitaUnit: "kWh",
 		perCapitaMultiplier: 1e6,
 	},
+	water: {
+		url: "data_water.csv",
+		data: null,
+		name: "Freshwater Withdrawal",
+		unit: "Billion m³",
+		color: "darkturquoise",
+		isPerCapitaifible: true,
+		perCapitaUnit: "m³",
+		perCapitaMultiplier: 1e9,
+	},
 	renewable: {
 		url: "data_renewable.csv",
 		data: null,
@@ -26,6 +36,22 @@ const DATASETS = {
 		unit: "People",
 		color: "darkblue",
 		isPerCapitaifible: false,
+	},
+	internet: {
+		url: "data_internet.csv",
+		data: null,
+		name: "% of Population Using the Internet",
+		unit: "%",
+		color: "darkorchid",
+		isPerCapitaifible: false,
+	},
+	gdp: {
+		url: "data_gdp.csv",
+		data: null,
+		name: "GDP",
+		unit: "USD",
+		color: "darkolivegreen",
+		isPerCapitaifible: true,
 	},
 };
 
@@ -432,8 +458,14 @@ function calculateYDomain(data) {
 }
 
 function formatTickNumber(n) {
-	if (n >= 1e12) {
+	if (n >= 1e21) {
 		return "too big!";
+	} else if (n >= 1e18) {
+		return (n/1e18).toPrecision(3) + "Qi";
+	} else if (n >= 1e15) {
+		return (n/1e15).toPrecision(3) + "Qa";
+	} else if (n >= 1e12) {
+		return (n/1e12).toPrecision(3) + "T";
 	} else if (n >= 1e9) {
 		return (n/1e9).toPrecision(3) + "B";
 	} else if (n >= 1e6) {
