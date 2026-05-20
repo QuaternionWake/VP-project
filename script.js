@@ -363,11 +363,11 @@ async function drawSidebar() {
 		d3.select("#sidebar-measurement-unit").text("");
 	}
 
-	drawLinechart(currentDataset, selectedCountry);
+	drawLinechart(currentDataset, selectedCountry, currentYear);
 }
 
 const GRID_LINE_COLOR = "#9bb";
-function drawLinechart(dataset, country) {
+function drawLinechart(dataset, country, year) {
 	const svg = d3.select("#linechart");
 	svg.selectAll("*").remove();
 
@@ -412,10 +412,18 @@ function drawLinechart(dataset, country) {
 			.data(yScale.ticks(nGridLines))
 			.join("line")
 			.attr("x1", margin.left)
-			.attr("x2", width + margin.left)
+			.attr("x2", margin.left + width)
 			.attr("y1", d => yScale(d))
 			.attr("y2", d => yScale(d))
 		);
+
+	// Year line
+	svg.append("line")
+		.attr("stroke", GRID_LINE_COLOR)
+		.attr("x1", xScale(year))
+		.attr("x2", xScale(year))
+		.attr("y1", margin.top)
+		.attr("y2", margin.top + height);
 
 	// The titular line
 	const yearData = YEARS.map(year => ({ value: data[year-YEARS[0]], year: year }));
