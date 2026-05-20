@@ -486,7 +486,7 @@ function splitData(data) {
 		}
 	}
 	if (canInsert) {
-		chunks.push(data.slice(start, -1));
+		chunks.push(data.slice(start));
 	}
 	return chunks;
 }
