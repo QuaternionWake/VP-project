@@ -104,6 +104,7 @@ const funs = {
 	getTotal(year) {
 		if (this.name.endsWith(PER_CAPITA_NAME_SUFFIX)) {
 			const total = DATASETS[currentDatasetKey].getTotal(year);
+			if (total === null) return null;
 			const pop = DATASETS.population.getTotal(year);
 			const mul = DATASETS[currentDatasetKey].perCapitaMultiplier || 1;
 			return total*mul/pop;
