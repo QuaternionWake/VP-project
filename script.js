@@ -129,6 +129,7 @@ const funs = {
 
 const datasetSelect = d3.select("#dataset-select");
 const yearSlider = d3.select("#year-slider");
+const yearText = d3.select("#year-text");
 const perCapitaToggle = d3.select("#per-capita-toggle");
 
 for (const key of Object.keys(DATASETS)) {
@@ -157,7 +158,18 @@ datasetSelect.on("change", () => {
 
 yearSlider.on("input", () => {
 	currentYear = yearSlider.property("value");
-	d3.select("#year-display").text(currentYear);
+	yearText.property("value", currentYear);
+	drawMap();
+	drawSidebar();
+});
+
+yearText.on("input", () => {
+	const text = yearText.property("value");
+	const num = Number(text);
+	if (YEARS.includes(num)) {
+		yearSlider.property("value", num);
+		currentYear = num;
+	}
 	drawMap();
 	drawSidebar();
 });
@@ -181,7 +193,7 @@ let currentYear = yearSlider.property("value");
 let isPerCapita = perCapitaToggle.property("checked");
 let selectedCountry = null;
 
-d3.select("#year-display").text(currentYear);
+yearText.property("value", currentYear);
 
 drawMap();
 drawSidebar();

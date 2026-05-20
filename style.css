@@ -135,6 +135,18 @@ input[type="range"] {
 	}
 }
 
+input[type="text"] {
+	width: 5em;
+	height: 1.5em;
+	background-color: #8dd;
+	border: 1px solid #6bb;
+	border-radius: 3px;
+	&:hover {
+		background-color: #aee;
+		border-color: #8cc;
+	}
+}
+
 select {
 	background-color: #8dd;
 	border: 2px solid #6bb;
