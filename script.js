@@ -409,15 +409,13 @@ function drawLinechart(dataset, country, year) {
 	// Grid lines
 	svg.append("g")
 		.attr("stroke", GRID_LINE_COLOR)
-		.call(g => g.append("g")
-			.selectAll("line")
-			.data(yScale.ticks(nGridLines))
-			.join("line")
-			.attr("x1", margin.left)
-			.attr("x2", margin.left + width)
-			.attr("y1", d => yScale(d))
-			.attr("y2", d => yScale(d))
-		);
+		.selectAll("line")
+		.data(yScale.ticks(nGridLines))
+		.join("line")
+		.attr("x1", margin.left)
+		.attr("x2", margin.left + width)
+		.attr("y1", d => yScale(d))
+		.attr("y2", d => yScale(d));
 
 	// Year line
 	svg.append("line")
