@@ -116,7 +116,9 @@ const funs = {
 			total += value;
 			count++;
 		}
-		if (this.unit == "%") {
+		if (count == 0) {
+			return null;
+		} else if (this.unit == "%") {
 			return total/count;
 		} else {
 			return total;
