@@ -186,6 +186,13 @@ h2 {
 	border-top: 1px solid #bdd;
 }
 
+.aura {
+	display: none;
+	&:has(+:hover) {
+		display: unset;
+	}
+}
+
 @media screen and (width >= 1300px) {
 	body {
 		justify-content: center;

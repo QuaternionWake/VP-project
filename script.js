@@ -362,16 +362,7 @@ async function drawSidebar() {
 	d3.select("#sidebar-title").text(name);
 	d3.select("#sidebar-measurement-title").text(currentDataset.name);
 	if (value) {
-		let decimals = 2;
-
-		if (value >= 1e4) decimals = 0;
-		else if (value >= 1e3) decimals = 1;
-		if (value == Math.round(value)) decimals = 0;
-		const formatter = Intl.NumberFormat("en-US", { maximumFractionDigits: decimals, useGrouping: true });
-
-		const str = formatter.format(value).replaceAll(",", " ");
-
-		d3.select("#sidebar-measurement-value").text(str);
+		d3.select("#sidebar-measurement-value").text(formatNumber(value));
 		d3.select("#sidebar-measurement-unit").text(currentDataset.unit);
 	} else {
 		d3.select("#sidebar-measurement-value").text("No data");
@@ -379,6 +370,17 @@ async function drawSidebar() {
 	}
 
 	drawLinechart(currentDataset, selectedCountry, currentYear);
+}
+
+function formatNumber(n) {
+	let decimals = 2;
+
+	if (n >= 1e4) decimals = 0;
+	else if (n >= 1e3) decimals = 1;
+	if (n == Math.round(n)) decimals = 0;
+	const formatter = Intl.NumberFormat("en-US", { maximumFractionDigits: decimals, useGrouping: true });
+
+	return formatter.format(n).replaceAll(",", " ");
 }
 
 const GRID_LINE_COLOR = "#9bb";
@@ -448,6 +450,47 @@ function drawLinechart(dataset, country, year) {
 			.attr("stroke-width", 2)
 			.attr("d", line);
 	}
+
+	// Data points
+	const g = svg.append("g")
+		.selectAll(".point")
+		.data(yearData.filter(d => d.value !== null))
+		.join("g")
+		.attr("class", "point");
+
+	g.append("circle")
+		.attr("fill", dataset.color)
+		.attr("cx", d => xScale(d.year))
+		.attr("cy", d => yScale(d.value))
+		.attr("r", 3);
+
+	g.append("circle")
+		.attr("class", "aura")
+		.attr("fill", dataset.color)
+		.attr("fill-opacity", 0.3)
+		.attr("stroke", dataset.color)
+		.attr("stroke-opacity", 0.5)
+		.attr("cx", d => xScale(d.year))
+		.attr("cy", d => yScale(d.value))
+		.attr("r", 6);
+
+	const w = xScale(1) - xScale(0);
+	g.append("rect")
+		.attr("id", d => d.year)
+		.attr("fill", "transparent")
+		.attr("x", d => xScale(d.year) - w/2)
+		.attr("y", d => yScale(d.value) - 20)
+		.attr("width", w)
+		.attr("height", 40)
+		.on("click", (_, d) => {
+			currentYear = d.year;
+			yearSlider.property("value", currentYear);
+			yearText.property("value", currentYear);
+			drawMap();
+			drawSidebar();
+		})
+		.append("title")
+		.text(d => d.year + ": " + formatNumber(d.value) + dataset.unit);
 
 	// X axis
 	svg.append("g")
