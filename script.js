@@ -254,7 +254,7 @@ async function drawMap() {
 	const path = d3.geoPath().projection(projection);
 	const colorScale = createColorScale(currentDataset, currentYear);
 
-	const microstates = ["GI", "VA", "SM", "MT", "MC", "LI", "JE", "IM", "GG", "AD", "AX"];
+	const microstates = ["GI", "SM", "MT", "MC", "LI", "IM", "AD"];
 
 	svg.selectAll(".country")
 		.data(topo.features.filter(d => !microstates.includes(d.id)))
