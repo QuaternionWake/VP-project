@@ -469,76 +469,86 @@ function drawLinechart(dataset, country, year) {
 
 	const nGridLines = dataset.unit === "%" ? 10 : 7;
 
+	if (data.filter(d => d !== null).length !== 0) {
 	// Grid lines
-	svg.append("g")
-		.attr("stroke", GRID_LINE_COLOR)
-		.selectAll("line")
-		.data(yScale.ticks(nGridLines))
-		.join("line")
-		.attr("x1", margin.left)
-		.attr("x2", margin.left + width)
-		.attr("y1", d => yScale(d))
-		.attr("y2", d => yScale(d));
+		svg.append("g")
+			.attr("stroke", GRID_LINE_COLOR)
+			.selectAll("line")
+			.data(yScale.ticks(nGridLines))
+			.join("line")
+			.attr("x1", margin.left)
+			.attr("x2", margin.left + width)
+			.attr("y1", d => yScale(d))
+			.attr("y2", d => yScale(d));
 
-	// Year line
-	svg.append("line")
-		.attr("stroke", GRID_LINE_COLOR)
-		.attr("x1", xScale(year))
-		.attr("x2", xScale(year))
-		.attr("y1", margin.top)
-		.attr("y2", margin.top + height);
+		// Year line
+		svg.append("line")
+			.attr("stroke", GRID_LINE_COLOR)
+			.attr("x1", xScale(year))
+			.attr("x2", xScale(year))
+			.attr("y1", margin.top)
+			.attr("y2", margin.top + height);
 
-	// The titular line
-	const yearData = YEARS.map(year => ({ value: data[year-YEARS[0]], year: year }));
-	for (const chunk of splitData(yearData)) {
-		svg.append("path")
-			.datum(chunk)
-			.attr("fill", "none")
+		// The titular line
+		const yearData = YEARS.map(year => ({ value: data[year-YEARS[0]], year: year }));
+		for (const chunk of splitData(yearData)) {
+			svg.append("path")
+				.datum(chunk)
+				.attr("fill", "none")
+				.attr("stroke", dataset.color)
+				.attr("stroke-width", 2)
+				.attr("d", line);
+		}
+
+		// Data points
+		const g = svg.append("g")
+			.selectAll(".point")
+			.data(yearData.filter(d => d.value !== null))
+			.join("g")
+			.attr("class", "point");
+
+		g.append("circle")
+			.attr("fill", dataset.color)
+			.attr("cx", d => xScale(d.year))
+			.attr("cy", d => yScale(d.value))
+			.attr("r", 3);
+
+		g.append("circle")
+			.attr("class", "aura")
+			.attr("fill", dataset.color)
+			.attr("fill-opacity", 0.3)
 			.attr("stroke", dataset.color)
-			.attr("stroke-width", 2)
-			.attr("d", line);
+			.attr("stroke-opacity", 0.5)
+			.attr("cx", d => xScale(d.year))
+			.attr("cy", d => yScale(d.value))
+			.attr("r", 6);
+
+		const w = xScale(1) - xScale(0);
+		g.append("rect")
+			.attr("id", d => d.year)
+			.attr("fill", "transparent")
+			.attr("x", d => xScale(d.year) - w/2)
+			.attr("y", d => yScale(d.value) - 20)
+			.attr("width", w)
+			.attr("height", 40)
+			.on("click", (_, d) => {
+				currentYear = d.year;
+				yearSlider.property("value", currentYear);
+				yearText.property("value", currentYear);
+				drawMap();
+				drawSidebar();
+			})
+			.append("title")
+			.text(d => d.year + ": " + formatNumber(d.value) + dataset.unit);
+	} else {
+		svg.append("text")
+			.attr("text-anchor", "middle")
+			.attr("x", margin.left + width/2)
+			.attr("y", margin.top + height/2)
+			.attr("dy", "0.5em")
+			.text("No data");
 	}
 
-	// Data points
-	const g = svg.append("g")
-		.selectAll(".point")
-		.data(yearData.filter(d => d.value !== null))
-		.join("g")
-		.attr("class", "point");
-
-	g.append("circle")
-		.attr("fill", dataset.color)
-		.attr("cx", d => xScale(d.year))
-		.attr("cy", d => yScale(d.value))
-		.attr("r", 3);
-
-	g.append("circle")
-		.attr("class", "aura")
-		.attr("fill", dataset.color)
-		.attr("fill-opacity", 0.3)
-		.attr("stroke", dataset.color)
-		.attr("stroke-opacity", 0.5)
-		.attr("cx", d => xScale(d.year))
-		.attr("cy", d => yScale(d.value))
-		.attr("r", 6);
-
-	const w = xScale(1) - xScale(0);
-	g.append("rect")
-		.attr("id", d => d.year)
-		.attr("fill", "transparent")
-		.attr("x", d => xScale(d.year) - w/2)
-		.attr("y", d => yScale(d.value) - 20)
-		.attr("width", w)
-		.attr("height", 40)
-		.on("click", (_, d) => {
-			currentYear = d.year;
-			yearSlider.property("value", currentYear);
-			yearText.property("value", currentYear);
-			drawMap();
-			drawSidebar();
-		})
-		.append("title")
-		.text(d => d.year + ": " + formatNumber(d.value) + dataset.unit);
 
 	// X axis
 	svg.append("g")
