@@ -37,6 +37,11 @@ svg {
 	stroke: #9aa;
 }
 
+.border:hover {
+	stroke: #eff;
+	stroke-width: 1.5px;
+}
+
 .border.selected {
 	stroke: #eff;
 	stroke-width: 3px;

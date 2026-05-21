@@ -262,7 +262,16 @@ async function drawMap() {
 		.attr("class", "country")
 		.attr("id", d => d.id)
 		.attr("d", path)
-		.attr("fill", d => getCountryColor(currentDataset, d.id, colorScale, currentYear))
+		.attr("fill", d => getCountryColor(currentDataset, d.id, colorScale, currentYear));
+
+	// borders
+	svg.selectAll(".border")
+		.data(topo.features.filter(d => !microstates.includes(d.id)))
+		.join("path")
+		.attr("class", "border")
+		.attr("id", d => d.id + "-border")
+		.attr("d", path)
+		.attr("fill", "transparent")
 		.on("click", (_, d) => {
 			d3.selectAll(".selected").classed("selected", false);
 			selectedCountry = d;
@@ -272,15 +281,6 @@ async function drawMap() {
 		})
 		.append("title")
 		.text(d => d.properties.name);
-
-	// borders
-	svg.selectAll(".border")
-		.data(topo.features.filter(d => !microstates.includes(d.id)))
-		.join("path")
-		.attr("class", "border")
-		.attr("id", d => d.id + "-border")
-		.attr("d", path)
-		.attr("fill", "none");
 
 	// microstates
 	svg.selectAll(".microstate")
