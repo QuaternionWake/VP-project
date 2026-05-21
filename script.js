@@ -2,7 +2,7 @@
 
 const DATASETS = {
 	power: {
-		url: "data_power.csv",
+		url: "data/power.csv",
 		data: null,
 		name: "Power Consumpton",
 		unit: " GWh",
@@ -12,7 +12,7 @@ const DATASETS = {
 		perCapitaMultiplier: 1e6,
 	},
 	water: {
-		url: "data_water.csv",
+		url: "data/water.csv",
 		data: null,
 		name: "Freshwater Withdrawal",
 		unit: " Billion m³",
@@ -22,7 +22,7 @@ const DATASETS = {
 		perCapitaMultiplier: 1e9,
 	},
 	renewable: {
-		url: "data_renewable.csv",
+		url: "data/renewable.csv",
 		data: null,
 		name: "% of Power Coming From Renewable Sources",
 		unit: "%",
@@ -30,7 +30,7 @@ const DATASETS = {
 		isPerCapitaifible: false,
 	},
 	population: {
-		url: "data_population.csv",
+		url: "data/population.csv",
 		data: null,
 		name: "Total Population",
 		unit: " People",
@@ -38,7 +38,7 @@ const DATASETS = {
 		isPerCapitaifible: false,
 	},
 	internet: {
-		url: "data_internet.csv",
+		url: "data/internet.csv",
 		data: null,
 		name: "% of Population Using the Internet",
 		unit: "%",
@@ -46,7 +46,7 @@ const DATASETS = {
 		isPerCapitaifible: false,
 	},
 	gdp: {
-		url: "data_gdp.csv",
+		url: "data/gdp.csv",
 		data: null,
 		name: "GDP",
 		unit: " USD",
