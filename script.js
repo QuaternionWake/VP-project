@@ -182,7 +182,7 @@ perCapitaToggle.on("change", () => {
 
 const TOPO_URL = "europe-topo.json";
 const YEARS = d3.range(Number(yearSlider.attr("min")), Number(yearSlider.attr("max"))+1);
-const NO_DATA_COLOR = "#ccc";
+const NO_DATA_COLOR = "#bbb";
 const PER_CAPITA_SUFFIX = "PerCapita";
 const PER_CAPITA_NAME_SUFFIX = " Per Capita";
 
