@@ -410,7 +410,7 @@ async function drawSidebar() {
 	}
 
 	d3.select("#sidebar-title").text(name);
-	d3.select("#sidebar-measurement-title").text(currentDataset.name);
+	d3.select("#sidebar-measurement-title").text(`${currentDataset.name} (${currentYear})`);
 	if (value) {
 		d3.select("#sidebar-measurement-value").text(formatNumber(value) + currentDataset.unit);
 	} else {
