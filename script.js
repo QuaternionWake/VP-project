@@ -5,20 +5,20 @@ const DATASETS = {
 		url: "data_power.csv",
 		data: null,
 		name: "Power Consumpton",
-		unit: "GWh",
+		unit: " GWh",
 		color: "gold",
 		isPerCapitaifible: true,
-		perCapitaUnit: "kWh",
+		perCapitaUnit: " kWh",
 		perCapitaMultiplier: 1e6,
 	},
 	water: {
 		url: "data_water.csv",
 		data: null,
 		name: "Freshwater Withdrawal",
-		unit: "Billion m³",
+		unit: " Billion m³",
 		color: "darkturquoise",
 		isPerCapitaifible: true,
-		perCapitaUnit: "m³",
+		perCapitaUnit: " m³",
 		perCapitaMultiplier: 1e9,
 	},
 	renewable: {
@@ -33,7 +33,7 @@ const DATASETS = {
 		url: "data_population.csv",
 		data: null,
 		name: "Total Population",
-		unit: "People",
+		unit: " People",
 		color: "darkblue",
 		isPerCapitaifible: false,
 	},
@@ -49,7 +49,7 @@ const DATASETS = {
 		url: "data_gdp.csv",
 		data: null,
 		name: "GDP",
-		unit: "USD",
+		unit: " USD",
 		color: "darkolivegreen",
 		isPerCapitaifible: true,
 	},
@@ -362,11 +362,9 @@ async function drawSidebar() {
 	d3.select("#sidebar-title").text(name);
 	d3.select("#sidebar-measurement-title").text(currentDataset.name);
 	if (value) {
-		d3.select("#sidebar-measurement-value").text(formatNumber(value));
-		d3.select("#sidebar-measurement-unit").text(currentDataset.unit);
+		d3.select("#sidebar-measurement-value").text(formatNumber(value) + currentDataset.unit);
 	} else {
 		d3.select("#sidebar-measurement-value").text("No data");
-		d3.select("#sidebar-measurement-unit").text("");
 	}
 
 	drawLinechart(currentDataset, selectedCountry, currentYear);
