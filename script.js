@@ -254,8 +254,10 @@ async function drawMap() {
 	const path = d3.geoPath().projection(projection);
 	const colorScale = createColorScale(currentDataset, currentYear);
 
+	const microstates = ["GI", "VA", "SM", "MT", "MC", "LI", "JE", "IM", "GG", "AD", "AX"];
+
 	svg.selectAll(".country")
-		.data(topo.features)
+		.data(topo.features.filter(d => !microstates.includes(d.id)))
 		.join("path")
 		.attr("class", "country")
 		.attr("id", d => d.id)
@@ -273,12 +275,33 @@ async function drawMap() {
 
 	// borders
 	svg.selectAll(".border")
-		.data(topo.features)
+		.data(topo.features.filter(d => !microstates.includes(d.id)))
 		.join("path")
 		.attr("class", "border")
 		.attr("id", d => d.id + "-border")
 		.attr("d", path)
 		.attr("fill", "none");
+
+	// microstates
+	svg.selectAll(".microstate")
+		.data(topo.features.filter(d => microstates.includes(d.id)))
+		.join("circle")
+		.attr("class", "country microstate border")
+		.attr("id", d => d.id)
+		.attr("cx", d => projection(countryCenter(d.geometry))[0])
+		.attr("cy", d => projection(countryCenter(d.geometry))[1])
+		.attr("r", 6)
+		.attr("fill", d => getCountryColor(currentDataset, d.id, colorScale, currentYear))
+		.on("click", (_, d) => {
+			d3.selectAll(".selected").classed("selected", false);
+			selectedCountry = d;
+			d3.select("#" + selectedCountry.id).classed("selected", true);
+			d3.select("#" + selectedCountry.id + "-border").classed("selected", true);
+			drawSidebar();
+		})
+		.append("title")
+		.text(d => d.properties.name);
+
 }
 
 function perCapitaify(datasetKey, populatons) {
@@ -313,6 +336,33 @@ function perCapitaify(datasetKey, populatons) {
 	}
 
 	DATASETS[perCapitaKey] = perCapita;
+}
+
+function countryCenter(geometry) {
+	const points = geometry.coordinates;
+	let minX, maxX, minY, maxY;
+	if (geometry.type === "Polygon") {
+		minX = maxX = points[0][0][0];
+		minY = maxY = points[0][0][1];
+		for (const point of points) {
+			maxX = maxX < point[0] ? point[0] : maxX;
+			minX = minX > point[0] ? point[0] : minX;
+			maxY = maxY < point[1] ? point[1] : maxY;
+			minY = minY > point[1] ? point[1] : minY;
+		}
+	} else {
+		minX = maxX = points[0][0][0][0];
+		minY = maxY = points[0][0][0][1];
+		for (const chunk of points) {
+			for (const point of chunk) {
+				maxX = maxX < point[0] ? point[0] : maxX;
+				minX = minX > point[0] ? point[0] : minX;
+				maxY = maxY < point[1] ? point[1] : maxY;
+				minY = minY > point[1] ? point[1] : minY;
+			}
+		}
+	}
+	return [(minX+maxX) / 2, (minY+maxY) / 2]
 }
 
 const ZERO_COLOR = "#e0e0e0";
