@@ -103,11 +103,20 @@ const funs = {
 
 	getTotal(year) {
 		if (this.name.endsWith(PER_CAPITA_NAME_SUFFIX)) {
-			const total = DATASETS[currentDatasetKey].getTotal(year);
+			let total = null;
+			let population = 0;
+			for (const country of DATASETS[currentDatasetKey].data.keys()) {
+				const value = DATASETS[currentDatasetKey].data.get(country)[year];
+				if (value) {
+					total = total || 0;
+					total += value;
+					population += DATASETS.population.data.get(country)[year];
+				}
+			}
 			if (total === null) return null;
-			const pop = DATASETS.population.getTotal(year);
+
 			const mul = DATASETS[currentDatasetKey].perCapitaMultiplier || 1;
-			return total*mul/pop;
+			return total*mul/population;
 		}
 		let total = 0;
 		let count = 0;
