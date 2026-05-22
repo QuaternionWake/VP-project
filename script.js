@@ -192,6 +192,7 @@ let currentDataset = DATASETS[currentDatasetKey];
 let currentYear = yearSlider.property("value");
 let isPerCapita = perCapitaToggle.property("checked");
 let selectedCountry = null;
+let hoveredCountry = null;
 
 yearText.property("value", currentYear);
 
@@ -279,6 +280,14 @@ async function drawMap() {
 			d3.select("#" + selectedCountry.id + "-border").classed("selected", true);
 			drawSidebar();
 		})
+		.on("mouseover", (_, d) => {
+			hoveredCountry = d;
+			drawSidebar();
+		})
+		.on("mouseout", () => {
+			hoveredCountry = null;
+			drawSidebar();
+		})
 		.append("title")
 		.text(d => d.properties.name);
 
@@ -297,6 +306,14 @@ async function drawMap() {
 			selectedCountry = d;
 			d3.select("#" + selectedCountry.id).classed("selected", true);
 			d3.select("#" + selectedCountry.id + "-border").classed("selected", true);
+			drawSidebar();
+		})
+		.on("mouseover", (_, d) => {
+			hoveredCountry = d;
+			drawSidebar();
+		})
+		.on("mouseout", () => {
+			hoveredCountry = null;
 			drawSidebar();
 		})
 		.append("title")
@@ -404,6 +421,9 @@ async function drawSidebar() {
 	if (selectedCountry) {
 		name = selectedCountry.properties.name;
 		value = currentDataset.getValue(selectedCountry.id, currentYear);
+	} else if (hoveredCountry) {
+		name = hoveredCountry.properties.name;
+		value = currentDataset.getValue(hoveredCountry.id, currentYear);
 	} else {
 		name = "Europe";
 		value = currentDataset.getTotal(currentYear);
@@ -417,7 +437,7 @@ async function drawSidebar() {
 		d3.select("#sidebar-measurement-value").text("No data");
 	}
 
-	drawLinechart(currentDataset, selectedCountry, currentYear);
+	drawLinechart(currentDataset, selectedCountry || hoveredCountry, currentYear);
 }
 
 function formatNumber(n) {
