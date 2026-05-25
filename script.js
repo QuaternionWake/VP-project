@@ -278,7 +278,7 @@ async function drawMap() {
 	svg.selectAll(".border")
 		.data(topo.features.filter(d => !microstates.includes(d.id)))
 		.join("path")
-		.attr("class", "border")
+		.attr("class", d => "border" + (d === selectedCountry ? " selected" : ""))
 		.attr("id", d => d.id + "-border")
 		.attr("d", path)
 		.attr("fill", "transparent")
@@ -327,7 +327,6 @@ async function drawMap() {
 		})
 		.append("title")
 		.text(d => d.properties.name);
-
 }
 
 function perCapitaify(datasetKey, populatons) {
