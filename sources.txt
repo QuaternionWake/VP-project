@@ -1,3 +1,7 @@
-data_power: https://data.worldbank.org/indicator/EG.USE.ELEC.KH.PC
-data_renewable: https://data.worldbank.org/indicator/EG.USE.COMM.CL.ZS
-data_population: https://data.worldbank.org/indicator/SP.POP.TOTL
+            map: https://github.com/amcharts/amcharts4-geodata/blob/master/dist/es2015/json/region/world/europeUltra.json
+     power data: https://data.worldbank.org/indicator/EG.USE.ELEC.KH.PC
+ renewable data: https://data.worldbank.org/indicator/EG.USE.COMM.CL.ZS
+population data: https://data.worldbank.org/indicator/SP.POP.TOTL
+  internet data: https://data.worldbank.org/indicator/IT.NET.USER.ZS
+       gdp data: https://data.worldbank.org/indicator/NY.GDP.MKTP.CD
+     water data: https://data.worldbank.org/indicator/ER.H2O.FWTL.K3
