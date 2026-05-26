@@ -38,6 +38,7 @@ svg {
 }
 
 .border:hover {
+	cursor: pointer;
 	stroke: #eff;
 	stroke-width: 1.5px;
 }

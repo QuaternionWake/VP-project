@@ -134,6 +134,42 @@ const funs = {
 			return total;
 		}
 	},
+
+	getTotalCountries(year, countries) {
+		if (this.name.endsWith(PER_CAPITA_NAME_SUFFIX)) {
+			let total = null;
+			let population = 0;
+			for (const country of DATASETS[currentDatasetKey].data.keys()) {
+				if (!countries.find(d => d.id === country)) continue;
+				const value = DATASETS[currentDatasetKey].data.get(country)[year];
+				if (value) {
+					total = total || 0;
+					total += value;
+					population += DATASETS.population.data.get(country)[year];
+				}
+			}
+			if (total === null) return null;
+
+			const mul = DATASETS[currentDatasetKey].perCapitaMultiplier || 1;
+			return total*mul/population;
+		}
+		let total = 0;
+		let count = 0;
+		for (const country of this.data.keys()) {
+			if (!countries.find(d => d.id === country)) continue;
+			const value = this.data.get(country)[year];
+			if (!value) continue;
+			total += value;
+			count++;
+		}
+		if (count == 0) {
+			return null;
+		} else if (this.unit == "%") {
+			return total/count;
+		} else {
+			return total;
+		}
+	},
 }
 
 const datasetSelect = d3.select("#dataset-select");
@@ -200,7 +236,7 @@ let currentDatasetKey = datasetSelect.property("value");
 let currentDataset = DATASETS[currentDatasetKey];
 let currentYear = yearSlider.property("value");
 let isPerCapita = perCapitaToggle.property("checked");
-let selectedCountry = null;
+let selectedCountries = [];
 let hoveredCountry = null;
 
 yearText.property("value", currentYear);
@@ -255,7 +291,7 @@ async function drawMap() {
 		.attr("opacity", 0)
 		.on("click", _ => {
 			d3.selectAll(".selected").classed("selected", false);
-			selectedCountry = null;
+			selectedCountries = [];
 			drawSidebar();
 		});
 
@@ -278,15 +314,21 @@ async function drawMap() {
 	svg.selectAll(".border")
 		.data(topo.features.filter(d => !microstates.includes(d.id)))
 		.join("path")
-		.attr("class", d => "border" + (d === selectedCountry ? " selected" : ""))
+		.attr("class", d => "border" + (selectedCountries.includes(d) ? " selected" : ""))
 		.attr("id", d => d.id + "-border")
 		.attr("d", path)
 		.attr("fill", "transparent")
 		.on("click", (_, d) => {
-			d3.selectAll(".selected").classed("selected", false);
-			selectedCountry = d;
-			d3.select("#" + selectedCountry.id).classed("selected", true);
-			d3.select("#" + selectedCountry.id + "-border").classed("selected", true);
+			const idx = selectedCountries.findIndex(c => c === d);
+			if (idx >= 0) {
+				selectedCountries.splice(idx, 1);
+				d3.select("#" + d.id).classed("selected", false);
+				d3.select("#" + d.id + "-border").classed("selected", false);
+			} else {
+				selectedCountries.push(d);
+				d3.select("#" + d.id).classed("selected", true);
+				d3.select("#" + d.id + "-border").classed("selected", true);
+			}
 			drawSidebar();
 		})
 		.on("mouseover", (_, d) => {
@@ -311,10 +353,14 @@ async function drawMap() {
 		.attr("r", 6)
 		.attr("fill", d => getCountryColor(currentDataset, d.id, colorScale, currentYear))
 		.on("click", (_, d) => {
-			d3.selectAll(".selected").classed("selected", false);
-			selectedCountry = d;
-			d3.select("#" + selectedCountry.id).classed("selected", true);
-			d3.select("#" + selectedCountry.id + "-border").classed("selected", true);
+			const idx = selectedCountries.findIndex(c => c === d);
+			if (idx >= 0) {
+				selectedCountries.splice(idx, 1);
+				d3.select("#" + d.id).classed("selected", false);
+			} else {
+				selectedCountries.push(d);
+				d3.select("#" + d.id).classed("selected", true);
+			}
 			drawSidebar();
 		})
 		.on("mouseover", (_, d) => {
@@ -376,7 +422,7 @@ function countryCenter(geometry) {
 			minY = minY > point[1] ? point[1] : minY;
 		}
 	} else {
-		minX = maxX = points[0][0][0][0];
+;		minX = maxX = points[0][0][0][0];
 		minY = maxY = points[0][0][0][1];
 		for (const chunk of points) {
 			for (const point of chunk) {
@@ -426,15 +472,24 @@ async function drawSidebar() {
 
 	let value;
 	let name;
-	if (selectedCountry) {
-		name = selectedCountry.properties.name;
-		value = currentDataset.getValue(selectedCountry.id, currentYear);
-	} else if (hoveredCountry) {
-		name = hoveredCountry.properties.name;
-		value = currentDataset.getValue(hoveredCountry.id, currentYear);
-	} else {
-		name = "Europe";
-		value = currentDataset.getTotal(currentYear);
+	switch (selectedCountries.length) {
+		case 0:
+			if (hoveredCountry) {
+				name = hoveredCountry.properties.name;
+				value = currentDataset.getValue(hoveredCountry.id, currentYear);
+			} else {
+				name = "Europe";
+				value = currentDataset.getTotal(currentYear);
+			}
+			break;
+		case 1:
+			name = selectedCountries[0].properties.name;
+			value = currentDataset.getValue(selectedCountries[0].id, currentYear);
+			break;
+		default:
+			name = "Multiple countries";
+			value = currentDataset.getTotalCountries(currentYear, selectedCountries);
+			break;
 	}
 
 	d3.select("#sidebar-title").text(name);
@@ -445,7 +500,15 @@ async function drawSidebar() {
 		d3.select("#sidebar-measurement-value").text("No data");
 	}
 
-	drawLinechart(currentDataset, selectedCountry || hoveredCountry, currentYear);
+	let countries;
+	if (selectedCountries.length !== 0) {
+		countries = selectedCountries;
+	} else if (hoveredCountry !== null) {
+		countries = [hoveredCountry];
+	} else {
+		countries = [];
+	}
+	drawLinechart(currentDataset, countries, currentYear);
 }
 
 function formatNumber(n) {
@@ -460,7 +523,7 @@ function formatNumber(n) {
 }
 
 const GRID_LINE_COLOR = "#9bb";
-function drawLinechart(dataset, country, year) {
+function drawLinechart(dataset, countries, year) {
 	const svg = d3.select("#linechart");
 	svg.selectAll("*").remove();
 
@@ -468,18 +531,27 @@ function drawLinechart(dataset, country, year) {
 	const width = svg.attr("width") - margin.left - margin.right;
 	const height = svg.attr("height") - margin.top - margin.bottom;
 
-	let data;
-	if (country) {
-		data = dataset.getCountryValues(country.id);
-	} else {
-		data = dataset.getTotals();
+	let datas;
+	switch (countries.length) {
+		case 0:
+			datas = [dataset.getTotals()];
+			break;
+		case 1:
+			datas = [dataset.getCountryValues(countries[0].id)];
+			break;
+		default:
+			datas = [];
+			for (const c of countries) {
+				datas.push(dataset.getCountryValues(c.id));
+			}
+			break;
 	}
 
 	let yDomain;
 	if (dataset.unit == "%") {
 		yDomain = [0, 100];
 	} else {
-		yDomain = calculateYDomain(data);
+		yDomain = calculateYDomain(datas);
 	}
 
 	const xScale = d3.scaleLinear()
@@ -497,77 +569,97 @@ function drawLinechart(dataset, country, year) {
 
 	const nGridLines = dataset.unit === "%" ? 10 : 7;
 
-	if (data.filter(d => d !== null).length !== 0) {
-	// Grid lines
-		svg.append("g")
-			.attr("stroke", GRID_LINE_COLOR)
-			.selectAll("line")
-			.data(yScale.ticks(nGridLines))
-			.join("line")
-			.attr("x1", margin.left)
-			.attr("x2", margin.left + width)
-			.attr("y1", d => yScale(d))
-			.attr("y2", d => yScale(d));
+	let i = 0;
+	if (datas.filter(d => d !== null).length !== 0) {
+		for (const data of datas) {
+			// Grid lines
+			svg.append("g")
+				.attr("stroke", GRID_LINE_COLOR)
+				.selectAll("line")
+				.data(yScale.ticks(nGridLines))
+				.join("line")
+				.attr("x1", margin.left)
+				.attr("x2", margin.left + width)
+				.attr("y1", d => yScale(d))
+				.attr("y2", d => yScale(d));
 
-		// Year line
-		svg.append("line")
-			.attr("stroke", GRID_LINE_COLOR)
-			.attr("x1", xScale(year))
-			.attr("x2", xScale(year))
-			.attr("y1", margin.top)
-			.attr("y2", margin.top + height);
+			// Year line
+			svg.append("line")
+				.attr("stroke", GRID_LINE_COLOR)
+				.attr("x1", xScale(year))
+				.attr("x2", xScale(year))
+				.attr("y1", margin.top)
+				.attr("y2", margin.top + height);
 
-		// The titular line
-		const yearData = YEARS.map(year => ({ value: data[year-YEARS[0]], year: year }));
-		for (const chunk of splitData(yearData)) {
-			svg.append("path")
-				.datum(chunk)
-				.attr("fill", "none")
+			// The titular line
+			const yearData = YEARS.map(year => ({ value: data[year-YEARS[0]], year: year }));
+			for (const chunk of splitData(yearData)) {
+				svg.append("path")
+					.datum(chunk)
+					.attr("fill", "none")
+					.attr("stroke", dataset.color)
+					.attr("stroke-width", 2)
+					.attr("d", line);
+			}
+
+			// Data points
+			const g = svg.append("g")
+				.selectAll(".point")
+				.data(yearData.filter(d => d.value !== null))
+				.join("g")
+				.attr("class", "point");
+
+			g.append("circle")
+				.attr("fill", dataset.color)
+				.attr("cx", d => xScale(d.year))
+				.attr("cy", d => yScale(d.value))
+				.attr("r", 3);
+
+			g.append("circle")
+				.attr("class", "aura")
+				.attr("fill", dataset.color)
+				.attr("fill-opacity", 0.3)
 				.attr("stroke", dataset.color)
-				.attr("stroke-width", 2)
-				.attr("d", line);
+				.attr("stroke-opacity", 0.5)
+				.attr("cx", d => xScale(d.year))
+				.attr("cy", d => yScale(d.value))
+				.attr("r", 6);
+
+			const w = xScale(1) - xScale(0);
+			g.append("rect")
+				.attr("id", d => d.year)
+				.attr("fill", "transparent")
+				.attr("x", d => xScale(d.year) - w/2)
+				.attr("y", d => yScale(d.value) - 20)
+				.attr("width", w)
+				.attr("height", 40)
+				.on("click", (_, d) => {
+					currentYear = d.year;
+					yearSlider.property("value", currentYear);
+					yearText.property("value", currentYear);
+					drawMap();
+					drawSidebar();
+				})
+				.append("title")
+				.text(d => {
+					if (countries.length > 1) {
+						return countries[i].properties.name + ", " + d.year + ": " + formatNumber(d.value) + dataset.unit
+					} else {
+						return d.year + ": " + formatNumber(d.value) + dataset.unit
+					}
+				});
+
+			if (datas.length > 1) {
+				svg.append("text")
+					.attr("text-anchor", "start")
+					.attr("x", xScale(yearData.filter(d => d.value !== null).at(-1).year))
+					.attr("y", yScale(yearData.filter(d => d.value !== null).at(-1).value))
+					.attr("dx", ".5em")
+					.attr("dy", ".5em")
+					.text(countries[i].id);
+			}
+			i++;
 		}
-
-		// Data points
-		const g = svg.append("g")
-			.selectAll(".point")
-			.data(yearData.filter(d => d.value !== null))
-			.join("g")
-			.attr("class", "point");
-
-		g.append("circle")
-			.attr("fill", dataset.color)
-			.attr("cx", d => xScale(d.year))
-			.attr("cy", d => yScale(d.value))
-			.attr("r", 3);
-
-		g.append("circle")
-			.attr("class", "aura")
-			.attr("fill", dataset.color)
-			.attr("fill-opacity", 0.3)
-			.attr("stroke", dataset.color)
-			.attr("stroke-opacity", 0.5)
-			.attr("cx", d => xScale(d.year))
-			.attr("cy", d => yScale(d.value))
-			.attr("r", 6);
-
-		const w = xScale(1) - xScale(0);
-		g.append("rect")
-			.attr("id", d => d.year)
-			.attr("fill", "transparent")
-			.attr("x", d => xScale(d.year) - w/2)
-			.attr("y", d => yScale(d.value) - 20)
-			.attr("width", w)
-			.attr("height", 40)
-			.on("click", (_, d) => {
-				currentYear = d.year;
-				yearSlider.property("value", currentYear);
-				yearText.property("value", currentYear);
-				drawMap();
-				drawSidebar();
-			})
-			.append("title")
-			.text(d => d.year + ": " + formatNumber(d.value) + dataset.unit);
 	} else {
 		svg.append("text")
 			.attr("text-anchor", "middle")
@@ -634,7 +726,13 @@ function splitData(data) {
 const MIN_Y_DOMAIN = 1.5
 const Y_PADDING = 0.05;
 function calculateYDomain(data) {
-	let extent = d3.extent(data);
+	let extents = [];
+	for (const d of data) {
+		const extent = d3.extent(d);
+		extents.push(extent[0]);
+		extents.push(extent[1]);
+	}
+	let extent = d3.extent(extents);
 	const lower = extent[0];
 	const upper = extent[1];
 	const middle = (lower+upper) / 2
