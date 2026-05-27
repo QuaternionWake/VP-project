@@ -158,7 +158,7 @@ const funs = {
 		for (const country of this.data.keys()) {
 			if (!countries.find(d => d.id === country)) continue;
 			const value = this.data.get(country)[year];
-			if (!value) continue;
+			if (value === null || value === undefined) continue;
 			total += value;
 			count++;
 		}
