@@ -602,10 +602,12 @@ function drawLinechart(dataset, countries, year) {
 					.attr("d", line);
 			}
 
+			const filteredYearData = yearData.filter(d => d.value !== null);
+
 			// Data points
 			const g = svg.append("g")
 				.selectAll(".point")
-				.data(yearData.filter(d => d.value !== null))
+				.data(filteredYearData)
 				.join("g")
 				.attr("class", "point");
 
@@ -649,11 +651,11 @@ function drawLinechart(dataset, countries, year) {
 					}
 				});
 
-			if (datas.length > 1) {
+			if (datas.length > 1 && filteredYearData.length !== 0) {
 				svg.append("text")
 					.attr("text-anchor", "start")
-					.attr("x", xScale(yearData.filter(d => d.value !== null).at(-1).year))
-					.attr("y", yScale(yearData.filter(d => d.value !== null).at(-1).value))
+					.attr("x", xScale(filteredYearData.at(-1).year))
+					.attr("y", yScale(filteredYearData.at(-1).value))
 					.attr("dx", ".5em")
 					.attr("dy", ".5em")
 					.text(countries[i].id);
