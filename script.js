@@ -176,6 +176,7 @@ const datasetSelect = d3.select("#dataset-select");
 const yearSlider = d3.select("#year-slider");
 const yearText = d3.select("#year-text");
 const perCapitaToggle = d3.select("#per-capita-toggle");
+const logScaleToggle = d3.select("#log-scale-toggle");
 
 for (const key of Object.keys(DATASETS)) {
 	const dataset = DATASETS[key];
@@ -196,6 +197,7 @@ datasetSelect.on("change", () => {
 	currentDatasetKey = datasetSelect.property("value");
 	currentDataset = DATASETS[currentDatasetKey];
 	perCapitaToggle.attr("disabled", currentDataset.isPerCapitaifible ? null : "true");
+	logScaleToggle.attr("disabled", currentDataset.unit !== "%" ? null : "true");
 	// window.sessionStorage.setItem("dataset-key", datasetKey);
 	drawMap();
 	drawSidebar();
@@ -225,6 +227,12 @@ perCapitaToggle.on("change", () => {
 	drawSidebar();
 })
 
+logScaleToggle.on("change", () => {
+	useLogScale = logScaleToggle.property("checked");
+	drawMap();
+	drawSidebar();
+})
+
 const TOPO_URL = "europe-topo.json";
 const YEARS = d3.range(Number(yearSlider.attr("min")), Number(yearSlider.attr("max"))+1);
 const NO_DATA_COLOR = "#bbb";
@@ -236,6 +244,7 @@ let currentDatasetKey = datasetSelect.property("value");
 let currentDataset = DATASETS[currentDatasetKey];
 let currentYear = yearSlider.property("value");
 let isPerCapita = perCapitaToggle.property("checked");
+let useLogScale = logScaleToggle.property("checked");
 let selectedCountries = [];
 let hoveredCountry = null;
 
@@ -298,7 +307,7 @@ async function drawMap() {
 	const projection = d3.geoMercator()
 		.fitSize([width, height], topo);
 	const path = d3.geoPath().projection(projection);
-	const colorScale = createColorScale(currentDataset, currentYear);
+	const colorScale = createColorScale(currentDataset, currentYear, useLogScale);
 
 	const microstates = ["GI", "SM", "MT", "MC", "LI", "IM", "AD"];
 
@@ -437,7 +446,7 @@ function countryCenter(geometry) {
 }
 
 const ZERO_COLOR = "#e0e0e0";
-function createColorScale(dataset, year) {
+function createColorScale(dataset, year, log) {
 	if (dataset.unit == "%") {
 		return d3.scaleLinear()
 			.domain([0, 100])
@@ -446,7 +455,8 @@ function createColorScale(dataset, year) {
 
 	const values = dataset.getYearValues(year).filter(d => d !== null);
 	const domain = d3.extent(values);
-	return d3.scaleLinear()
+	const scale = log ? d3.scaleLog() : d3.scaleLinear();
+	return scale
 		.domain(domain)
 		.range([ZERO_COLOR, dataset.color]);
 }
@@ -508,7 +518,7 @@ async function drawSidebar() {
 	} else {
 		countries = [];
 	}
-	drawLinechart(currentDataset, countries, currentYear);
+	drawLinechart(currentDataset, countries, currentYear, useLogScale);
 }
 
 function formatNumber(n) {
@@ -523,7 +533,7 @@ function formatNumber(n) {
 }
 
 const GRID_LINE_COLOR = "#9bb";
-function drawLinechart(dataset, countries, year) {
+function drawLinechart(dataset, countries, year, log) {
 	const svg = d3.select("#linechart");
 	svg.selectAll("*").remove();
 
@@ -551,7 +561,7 @@ function drawLinechart(dataset, countries, year) {
 	if (dataset.unit == "%") {
 		yDomain = [0, 100];
 	} else {
-		yDomain = calculateYDomain(datas);
+		yDomain = calculateYDomain(datas, log);
 	}
 
 	const xScale = d3.scaleLinear()
@@ -559,7 +569,7 @@ function drawLinechart(dataset, countries, year) {
 		.range([margin.left, width + margin.left])
 		.nice();
 
-	const yScale = d3.scaleLinear()
+	const yScale = (log && dataset.unit !== "%" ? d3.scaleLog() : d3.scaleLinear())
 		.domain(yDomain)
 		.range([height + margin.top, margin.top]);
 
@@ -727,7 +737,8 @@ function splitData(data) {
 
 const MIN_Y_DOMAIN = 1.5
 const Y_PADDING = 0.05;
-function calculateYDomain(data) {
+const Y_PADDING_LOG = 1.05;
+function calculateYDomain(data, log) {
 	let extents = [];
 	for (const d of data) {
 		const extent = d3.extent(d);
@@ -739,15 +750,26 @@ function calculateYDomain(data) {
 	const upper = extent[1];
 	const middle = (lower+upper) / 2
 
-	const y_padding = (upper - lower) * Y_PADDING;
-	extent[0] -= y_padding;
-	extent[1] += y_padding;
+	if (log) {
+		extent[0] /= Y_PADDING_LOG;
+		extent[1] *= Y_PADDING_LOG;
 
-	if (lower > upper/MIN_Y_DOMAIN) {
-		return [middle - lower*MIN_Y_DOMAIN/2, middle + lower*MIN_Y_DOMAIN/2];
+		if (lower > upper/MIN_Y_DOMAIN) {
+			return [Math.max(1, lower/MIN_Y_DOMAIN), upper*MIN_Y_DOMAIN];
+		}
+
+		return [Math.max(1, extent[0]), extent[1]];
+	} else {
+		const y_padding = (upper - lower) * Y_PADDING;
+		extent[0] -= y_padding;
+		extent[1] += y_padding;
+
+		if (lower > upper/MIN_Y_DOMAIN) {
+			return [middle - lower*MIN_Y_DOMAIN/2, middle + lower*MIN_Y_DOMAIN/2];
+		}
+
+		return extent;
 	}
-
-	return extent;
 }
 
 function formatTickNumber(n) {
