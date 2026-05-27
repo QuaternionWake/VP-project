@@ -581,18 +581,18 @@ function drawLinechart(dataset, countries, year, log) {
 
 	let i = 0;
 	if (datas.filter(d => d !== null).length !== 0) {
-		for (const data of datas) {
-			// Grid lines
-			svg.append("g")
-				.attr("stroke", GRID_LINE_COLOR)
-				.selectAll("line")
-				.data(yScale.ticks(nGridLines))
-				.join("line")
-				.attr("x1", margin.left)
-				.attr("x2", margin.left + width)
-				.attr("y1", d => yScale(d))
-				.attr("y2", d => yScale(d));
+		// Grid lines
+		svg.append("g")
+			.attr("stroke", GRID_LINE_COLOR)
+			.selectAll("line")
+			.data(yScale.ticks(nGridLines))
+			.join("line")
+			.attr("x1", margin.left)
+			.attr("x2", margin.left + width)
+			.attr("y1", d => yScale(d))
+			.attr("y2", d => yScale(d));
 
+		for (const data of datas) {
 			// Year line
 			svg.append("line")
 				.attr("stroke", GRID_LINE_COLOR)
