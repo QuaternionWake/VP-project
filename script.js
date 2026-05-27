@@ -737,7 +737,7 @@ function splitData(data) {
 
 const MIN_Y_DOMAIN = 1.5
 const Y_PADDING = 0.05;
-const Y_PADDING_LOG = 1.05;
+const Y_PADDING_LOG = 1.2;
 function calculateYDomain(data, log) {
 	let extents = [];
 	for (const d of data) {
@@ -765,10 +765,10 @@ function calculateYDomain(data, log) {
 		extent[1] += y_padding;
 
 		if (lower > upper/MIN_Y_DOMAIN) {
-			return [middle - lower*MIN_Y_DOMAIN/2, middle + lower*MIN_Y_DOMAIN/2];
+			return [Math.max(0, middle - lower*MIN_Y_DOMAIN/2), middle + lower*MIN_Y_DOMAIN/2];
 		}
 
-		return extent;
+		return [Math.max(0, extent[0]), extent[1]];
 	}
 }
 
